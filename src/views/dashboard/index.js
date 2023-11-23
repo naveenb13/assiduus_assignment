@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Paper, IconButton, InputBase, Button, Box, Drawer, AppBar, CssBaseline, Toolbar, List, Typography, Divider, ListItem, ListItemButton, ListItemIcon, ListItemText, Badge, Avatar, FormControl, Select, Grid } from '@mui/material'
 import { Dashboard, AccountBalanceWallet, AttachMoney, Description, Person, Contacts, Search, Notifications, ArrowDropDown, Menu } from '@mui/icons-material'
 import { Link, useLocation } from 'react-router-dom'
@@ -14,7 +14,29 @@ const DashboardPage = () => {
 
     const location = useLocation();
 
-    const [lineChartData, setLineChartData] = useState([50, 60, 100, 110, 50, 80, 80, 40, 55, 60])
+    const [dataRes, setDataRes] = useState("")
+
+    useEffect(() => {
+        fetch("https://data.covid19india.org/v4/min/timeseries.min.json")
+            .then(res => res.json())
+            .then((response) => {
+                const startDate = new Date("2020-07-01");
+                const endDate = new Date("2020-07-31");
+                const transformedData = Object.entries(response && response["AN"] && response["AN"]["dates"]).filter(([date, values]) => {
+                    const currentDate = new Date(date);
+                    return currentDate >= startDate && currentDate <= endDate;
+                })
+                    .map(([date, values]) => (
+                        {
+                            date: date,
+                            confirmed: values.total.confirmed,
+                            recovered: values.total.recovered,
+                        }
+                    ));
+                setDataRes(transformedData)
+            })
+    }, [])
+
     const [barChartData, setBarChartData] = useState([30, 50, 120, 80, 90, 60])
     const [barChartTwoData, setBarChartTwoData] = useState([
         { month: "August", out: 20, in: 20 },
@@ -34,13 +56,9 @@ const DashboardPage = () => {
 
     const randomize = () => {
         d3.selectAll("g > *").remove()
-        const random = lineChartData.map(value => ({ value, sort: Math.random() }))
-            .sort((a, b) => a.sort - b.sort)
-            .map(({ value }) => value)
         const random1 = barChartData.map(value => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value)
-        setLineChartData(random)
         setBarChartData(random1)
         setBarChartTwoData([
             { month: "August", out: 20 * Math.random(), in: 20 * Math.random() },
@@ -221,8 +239,8 @@ const DashboardPage = () => {
                             alignItems: 'center',
                             paddingLeft: 0
                         }}>
-                            <Box sx={{ backgroundColor: "white", borderRadius: 2 }} width={"480px"} height={"240px"}>
-                                <LineChartOne lineChartData={lineChartData} setLineChartData={setLineChartData} />
+                            <Box sx={{ backgroundColor: "white", borderRadius: 2 }} width={"530px"} height={"440px"}>
+                                <LineChartOne dataRes={dataRes} />
                             </Box>
                         </Grid>
                         <Grid item xs={12} lg={6} md={6} sm={12} sx={{

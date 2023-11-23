@@ -67,6 +67,10 @@ const BarChartOne = ({ barChartData }) => {
             .attr('height', d => height - yAxisScale(d))
             .attr('fill', "#47B747")
             .attr('rx', 5)
+            .style("cursor", "pointer")
+            .append('title')
+            .text((d) => `${d}`);
+
     }, [barChartData])
 
     return (
